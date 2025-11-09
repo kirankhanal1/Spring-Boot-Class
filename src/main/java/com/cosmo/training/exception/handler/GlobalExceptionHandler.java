@@ -1,6 +1,8 @@
-package com.cosmo.training.exception;
+package com.cosmo.training.exception.handler;
 
 import com.cosmo.training.core.dto.ApiResponse;
+import com.cosmo.training.exception.DuplicateEmailException;
+import com.cosmo.training.exception.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -28,5 +30,11 @@ public class GlobalExceptionHandler {
         ApiResponse apiResponse = new ApiResponse(false, "Something went wrong "+ex.getMessage(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value());
         return new ResponseEntity<>(apiResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ApiResponse> handleNotFoundException(NotFoundException ex) {
+        ApiResponse apiResponse = new ApiResponse(false, ex.getMessage(), HttpStatus.NOT_FOUND.value());
+        return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
     }
 }

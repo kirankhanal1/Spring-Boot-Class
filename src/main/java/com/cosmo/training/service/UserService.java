@@ -1,26 +1,19 @@
 package com.cosmo.training.service;
 
+
+import com.cosmo.training.core.dto.ApiResponse;
 import com.cosmo.training.dto.RegisterUserDto;
-import com.cosmo.training.entity.User;
-import com.cosmo.training.exception.DuplicateEmailException;
-import com.cosmo.training.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import com.cosmo.training.dto.UpdateUserDto;
+import org.springframework.http.ResponseEntity;
 
-@Service
-public class UserService {
-    @Autowired
-    private UserRepository userRepository;
+public interface UserService {
+    ResponseEntity<ApiResponse<?>> saveUser(RegisterUserDto registerUserDto);
 
-    public void saveUser(RegisterUserDto registerUserDto) {
-        User user = new User();
-        boolean existsByEmail = userRepository.existsByEmail(registerUserDto.getEmail());
-        if (existsByEmail) {
-            throw new DuplicateEmailException("User with email " + registerUserDto.getEmail() + " already exists");
-        }
-        user.setUsername(registerUserDto.getUsername());
-        user.setPassword(registerUserDto.getPassword());
-        user.setEmail(registerUserDto.getEmail());
-        userRepository.save(user);
-    }
+    ResponseEntity<ApiResponse<?>> listUsers();
+
+    ResponseEntity<ApiResponse<?>> getUserById(Integer id);
+
+    ResponseEntity<ApiResponse<?>> deleteUserById(Integer id);
+
+    ResponseEntity<ApiResponse<?>> updateUser(UpdateUserDto updateUserDto);
 }
