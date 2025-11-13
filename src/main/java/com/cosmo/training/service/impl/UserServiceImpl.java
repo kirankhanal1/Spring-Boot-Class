@@ -1,96 +1,143 @@
 package com.cosmo.training.service.impl;
 
 import com.cosmo.training.core.dto.ApiResponse;
-import com.cosmo.training.dto.ListUserDto;
-import com.cosmo.training.dto.RegisterUserDto;
-import com.cosmo.training.dto.UpdateUserDto;
+import com.cosmo.training.dto.request.*;
+import com.cosmo.training.dto.response.ListUserResponse;
+import com.cosmo.training.dto.response.ViewUserResponse;
 import com.cosmo.training.entity.User;
 import com.cosmo.training.exception.DuplicateEmailException;
 import com.cosmo.training.exception.NotFoundException;
+import com.cosmo.training.mapper.UserMapper;
 import com.cosmo.training.repository.UserRepository;
 import com.cosmo.training.service.UserService;
+import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Service
 public class UserServiceImpl implements UserService {
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
+
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private UserMapper userMapper;
 
-    public ResponseEntity<ApiResponse<?>> saveUser(RegisterUserDto registerUserDto) {
-        if (userRepository.existsByEmail(registerUserDto.getEmail())) {
-            throw new DuplicateEmailException("User with email " + registerUserDto.getEmail() + " already exists");
+
+    @Override
+    @Transactional
+    public ResponseEntity<ApiResponse<?>> saveUser(RegisterUserRequest registerUserRequest) {
+        if (userRepository.existsByEmail(registerUserRequest.getEmail())) {
+            log.error("Failed to save user. User with email {} already exists", registerUserRequest.getEmail());
+            throw new DuplicateEmailException("User with email " + registerUserRequest.getEmail() + " already exists");
         }
 
-        User user = new User();
-        user.setUsername(registerUserDto.getUsername());
-        user.setPassword(registerUserDto.getPassword());
-        user.setEmail(registerUserDto.getEmail());
-        user.setFullName(registerUserDto.getFullName());
-
+        //Map and Save
+        User user = userMapper.createUser(registerUserRequest);
         userRepository.save(user);
 
+        log.info("User with email {} saved", registerUserRequest.getEmail());
         ApiResponse<?> response = new ApiResponse<>(true, "User saved successfully", 201);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-
     @Override
-    public ResponseEntity<ApiResponse<?>> listUsers() {
-        List<User> users = userRepository.findAll();
-
-        List<ListUserDto> listUserDtos = new ArrayList<>();
-
-        for (User user : users) {
-            ListUserDto listUserDto = new ListUserDto();
-            listUserDto.setUsername(user.getUsername());
-            listUserDto.setEmail(user.getEmail());
-            listUserDto.setFullName(user.getFullName());
-
-            listUserDtos.add(listUserDto);
+    public ResponseEntity<ApiResponse<?>> listUsers(PaginationRequest paginationRequest) {
+        Pageable pageable = PageRequest.of(paginationRequest.getPage(), paginationRequest.getSize(), Sort.by(Sort.Direction.DESC, "id"));
+        Page<User> usersPage;
+        if (paginationRequest.getKeyword()!=null  && !paginationRequest.getKeyword().trim().isEmpty()) {
+            usersPage= userRepository.searchUsers(paginationRequest.getKeyword().trim(),pageable);
         }
-        ApiResponse<?> response = new ApiResponse<>(true, "Users listed successfully", 200, listUserDtos);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        else {
+            usersPage = userRepository.findAll(pageable);
+        }
+
+        //Map and List
+        List<ListUserResponse> listUserResponse = userMapper.listAllUsers(usersPage);
+
+        log.info("Users listed successfully");
+        ApiResponse<?> response = new ApiResponse<>(true, "Users listed successfully", 200, listUserResponse);
+        return ResponseEntity.ok(response);
     }
 
     @Override
-    public ResponseEntity<ApiResponse<?>> getUserById(Integer id) {
-        Optional<User> user = userRepository.findById(id);
+    public ResponseEntity<ApiResponse<?>> viewUser(ViewUserRequest viewUserRequest) {
+        Optional<User> user = userRepository.findById(viewUserRequest.getId());
 
         if (user.isEmpty()) {
-            throw new NotFoundException("User with id " + id + " not found");
+            log.error("User with id {} not found", viewUserRequest.getId());
+            throw new NotFoundException("User with id " + viewUserRequest.getId() + " not found");
         }
 
-        ApiResponse<?> response = new ApiResponse<>(true, "User details fetched successfully", 200, user.get());
+        //Map and view
+        ViewUserResponse viewUserResponse = userMapper.entityToViewDetails(user.get());
+
+        log.info("User with id {} viewed successfully", viewUserRequest.getId());
+        ApiResponse<?> response = new ApiResponse<>(true, "User details fetched successfully", 200, viewUserResponse);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @Override
-    public ResponseEntity<ApiResponse<?>> deleteUserById(Integer id) {
-        userRepository.deleteById(id);
+    public ResponseEntity<ApiResponse<?>> deleteUser(DeleteUserRequest deleteUserRequest) {
+        Optional<User> user = userRepository.findById(deleteUserRequest.getId());
+
+        if (user.isEmpty()) {
+            log.error("User with id {} not found", deleteUserRequest.getId());
+            throw new NotFoundException("User with id " + deleteUserRequest.getId() + " not found");
+        }
+
+        //Map and Save
+        User userToDelete = userMapper.deleteUser(user.get());
+        userRepository.save(userToDelete);
+        log.info("User with id {} deleted successfully", deleteUserRequest.getId());
 
         ApiResponse<?> response = new ApiResponse<>(true, "User deleted successfully", 200);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @Override
-    public ResponseEntity<ApiResponse<?>> updateUser(UpdateUserDto updateUserDto) {
-        Optional<User> user = userRepository.findById(updateUserDto.getId());
+    public ResponseEntity<ApiResponse<?>> updateUser(UpdateUserRequest updateUserRequest) {
+        Optional<User> userOptional = userRepository.findById(updateUserRequest.getId());
 
-        User userToUpdate = user.get();
+        if (userOptional.isEmpty()) {
+            log.error("User with id {} not found", updateUserRequest.getId());
+            throw new NotFoundException("User with id " + updateUserRequest.getId() + " not found");
+        }
 
-        userToUpdate.setEmail(updateUserDto.getEmail());
-        userToUpdate.setFullName(updateUserDto.getFullName());
+        User existingUser = userOptional.get();
+
+        //  Email uniqueness check using Objects.equals
+        if (updateUserRequest.getEmail() != null
+                && !Objects.equals(updateUserRequest.getEmail(), existingUser.getEmail())) {
+            Optional<User> userWithSameEmail = userRepository.findByEmail(updateUserRequest.getEmail().trim());
+            if (userWithSameEmail.isPresent() && !Objects.equals(userWithSameEmail.get().getId(), existingUser.getId())) {
+                log.error("Email {} already belongs to another user", updateUserRequest.getEmail());
+                throw new DuplicateEmailException("Email is already taken by another user");
+            }
+        }
+
+        //  Map and save
+        User userToUpdate = userMapper.updateUser(existingUser, updateUserRequest);
         userRepository.save(userToUpdate);
 
+        log.info("User with id {} updated successfully", updateUserRequest.getId());
+
         ApiResponse<?> response = new ApiResponse<>(true, "User updated successfully", 200);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(response);
     }
+
 }

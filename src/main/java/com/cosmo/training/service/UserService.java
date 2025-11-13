@@ -2,18 +2,17 @@ package com.cosmo.training.service;
 
 
 import com.cosmo.training.core.dto.ApiResponse;
-import com.cosmo.training.dto.RegisterUserDto;
-import com.cosmo.training.dto.UpdateUserDto;
+import com.cosmo.training.dto.request.*;
 import org.springframework.http.ResponseEntity;
 
 public interface UserService {
-    ResponseEntity<ApiResponse<?>> saveUser(RegisterUserDto registerUserDto);
+    ResponseEntity<ApiResponse<?>> saveUser(RegisterUserRequest registerUserRequest);
 
-    ResponseEntity<ApiResponse<?>> listUsers();
+    ResponseEntity<ApiResponse<?>> listUsers(PaginationRequest paginationRequest);
 
-    ResponseEntity<ApiResponse<?>> getUserById(Integer id);
+    ResponseEntity<ApiResponse<?>> viewUser(ViewUserRequest viewUserRequest);
 
-    ResponseEntity<ApiResponse<?>> deleteUserById(Integer id);
+    ResponseEntity<ApiResponse<?>> deleteUser(DeleteUserRequest deleteUserRequest);
 
-    ResponseEntity<ApiResponse<?>> updateUser(UpdateUserDto updateUserDto);
+    ResponseEntity<ApiResponse<?>> updateUser(UpdateUserRequest updateUserRequest);
 }

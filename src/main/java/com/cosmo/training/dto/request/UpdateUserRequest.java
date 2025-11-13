@@ -1,4 +1,4 @@
-package com.cosmo.training.dto;
+package com.cosmo.training.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class UpdateUserDto {
+public class UpdateUserRequest {
     @NotNull(message = "Id is required")
     private Integer id;
 

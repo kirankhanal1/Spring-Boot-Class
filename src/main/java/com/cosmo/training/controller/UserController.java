@@ -1,8 +1,7 @@
 package com.cosmo.training.controller;
 
 import com.cosmo.training.core.dto.ApiResponse;
-import com.cosmo.training.dto.RegisterUserDto;
-import com.cosmo.training.dto.UpdateUserDto;
+import com.cosmo.training.dto.request.*;
 import com.cosmo.training.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,27 +15,27 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<?>> saveUser(@RequestBody @Valid RegisterUserDto registerUserDto) {
-        return userService.saveUser(registerUserDto);
+    public ResponseEntity<ApiResponse<?>> createUser(@RequestBody @Valid RegisterUserRequest registerUserRequest) {
+        return userService.saveUser(registerUserRequest);
     }
 
-    @GetMapping("/list")
-    public ResponseEntity<ApiResponse<?>> getAllUser() {
-        return userService.listUsers();
+    @PostMapping("/list")
+    public ResponseEntity<ApiResponse<?>> listAllUsers(@RequestBody PaginationRequest paginationRequest) {
+        return userService.listUsers(paginationRequest);
     }
 
-    @GetMapping("/find/{id}")
-    public ResponseEntity<ApiResponse<?>> getUserById(@PathVariable Integer id) {
-        return userService.getUserById(id);
+    @PostMapping("/view")
+    public ResponseEntity<ApiResponse<?>> getUserById(@RequestBody @Valid ViewUserRequest viewUserRequest) {
+        return userService.viewUser(viewUserRequest);
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<ApiResponse<?>> deleteById(@PathVariable Integer id) {
-        return userService.deleteUserById(id);
+    @PostMapping("/delete")
+    public ResponseEntity<ApiResponse<?>> deleteById(@RequestBody @Valid DeleteUserRequest deleteUserRequest) {
+        return userService.deleteUser(deleteUserRequest);
     }
 
-    @PutMapping("/update")
-    public ResponseEntity<ApiResponse<?>> updateUser(@RequestBody @Valid UpdateUserDto updateUserDto) {
-        return userService.updateUser(updateUserDto);
+    @PostMapping("/update")
+    public ResponseEntity<ApiResponse<?>> updateUser(@RequestBody @Valid UpdateUserRequest updateUserRequest) {
+        return userService.updateUser(updateUserRequest);
     }
 }
