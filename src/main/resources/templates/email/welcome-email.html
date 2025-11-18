@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml" lang="">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome Email</title>
+</head>
+<body style="font-family: Arial, sans-serif;">
+<h2>Hello, <span th:text="${fullName}">User</span> 👋</h2>
+
+<p>Welcome to our platform.</p>
+
+<p>Your registered email is:
+    <strong th:text="${email}">example@gmail.com</strong>
+</p>
+
+<p>We are excited to have you on board.</p>
+
+<hr/>
+<small>This is an automated email. Do not reply.</small>
+</body>
+</html>

@@ -1,20 +1,32 @@
 package com.cosmo.training.mapper;
 
+import com.cosmo.training.core.dto.SendMailRequest;
+import com.cosmo.training.core.mail.service.MailService;
 import com.cosmo.training.dto.request.RegisterUserRequest;
 import com.cosmo.training.dto.request.UpdateUserRequest;
 import com.cosmo.training.dto.response.ListUserResponse;
 import com.cosmo.training.dto.response.ViewUserResponse;
 import com.cosmo.training.entity.User;
+import com.cosmo.training.service.UserService;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
 public abstract class UserMapper {
+
+    @Autowired
+    private MailService mailService;
+
+    @Autowired
+    private TemplateEngine templateEngine;
 
     //Mapper method to create new user
     public User createUser(RegisterUserRequest registerUserRequest) {
@@ -47,4 +59,5 @@ public abstract class UserMapper {
         user.setEmail(updateUserRequest.getEmail());
         return user;
     }
+
 }

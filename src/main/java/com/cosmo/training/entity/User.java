@@ -35,6 +35,9 @@ public class User {
     @Column(name="password", nullable = false,length = 15)
     private String  password;
 
+    @Column(name="profile_picture_link", nullable = false)
+    private String profilePicture;
+
     @Column(name="is_deleted", nullable = false)
     private Boolean isDeleted = false;
 
@@ -45,6 +48,5 @@ public class User {
     @LastModifiedDate
     @Column(name="updated_at", nullable = false)
     private LocalDateTime updatedAt;
-
 
 }

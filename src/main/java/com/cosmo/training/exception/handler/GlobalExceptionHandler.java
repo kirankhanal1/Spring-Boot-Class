@@ -2,6 +2,8 @@ package com.cosmo.training.exception.handler;
 
 import com.cosmo.training.core.dto.ApiResponse;
 import com.cosmo.training.exception.DuplicateEmailException;
+import com.cosmo.training.exception.FileSizeExceededException;
+import com.cosmo.training.exception.MailException;
 import com.cosmo.training.exception.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,5 +38,17 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse> handleNotFoundException(NotFoundException ex) {
         ApiResponse apiResponse = new ApiResponse(false, ex.getMessage(), HttpStatus.NOT_FOUND.value());
         return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(MailException.class)
+    public ResponseEntity<ApiResponse> handlMailException(MailException ex) {
+        ApiResponse apiResponse = new ApiResponse(false, ex.getMessage(), HttpStatus.FAILED_DEPENDENCY.value());
+        return new ResponseEntity<>(apiResponse, HttpStatus.FAILED_DEPENDENCY);
+    }
+
+    @ExceptionHandler(FileSizeExceededException.class)
+    public ResponseEntity<ApiResponse> handleFileSizeExceededException(FileSizeExceededException ex) {
+        ApiResponse apiResponse = new ApiResponse(false, ex.getMessage(), HttpStatus.BANDWIDTH_LIMIT_EXCEEDED.value());
+        return new ResponseEntity<>(apiResponse, HttpStatus.BANDWIDTH_LIMIT_EXCEEDED);
     }
 }

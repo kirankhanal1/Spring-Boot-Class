@@ -1,11 +1,15 @@
 package com.cosmo.training.service.impl;
 
 import com.cosmo.training.core.dto.ApiResponse;
+import com.cosmo.training.core.file.service.FileService;
+import com.cosmo.training.core.mail.service.EmailTemplateService;
+import com.cosmo.training.core.mail.service.MailService;
 import com.cosmo.training.dto.request.*;
 import com.cosmo.training.dto.response.ListUserResponse;
 import com.cosmo.training.dto.response.ViewUserResponse;
 import com.cosmo.training.entity.User;
 import com.cosmo.training.exception.DuplicateEmailException;
+import com.cosmo.training.exception.FileSizeExceededException;
 import com.cosmo.training.exception.NotFoundException;
 import com.cosmo.training.mapper.UserMapper;
 import com.cosmo.training.repository.UserRepository;
@@ -21,11 +25,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -36,11 +40,17 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private MailService mailService;
+    @Autowired
+    private EmailTemplateService emailTemplateService;
+    @Autowired
+    private FileService fileService;
 
 
     @Override
     @Transactional
-    public ResponseEntity<ApiResponse<?>> saveUser(RegisterUserRequest registerUserRequest) {
+    public ResponseEntity<ApiResponse<?>> saveUser(RegisterUserRequest registerUserRequest, MultipartFile profilePicture) {
         if (userRepository.existsByEmail(registerUserRequest.getEmail())) {
             log.error("Failed to save user. User with email {} already exists", registerUserRequest.getEmail());
             throw new DuplicateEmailException("User with email " + registerUserRequest.getEmail() + " already exists");
@@ -48,7 +58,25 @@ public class UserServiceImpl implements UserService {
 
         //Map and Save
         User user = userMapper.createUser(registerUserRequest);
+
+        // upload profile picture
+        if (profilePicture != null && !profilePicture.isEmpty()) {
+
+            long maxSize = 10 * 1024 * 1024; // 10 MB in bytes
+
+            if (profilePicture.getSize() > maxSize) {
+                throw new FileSizeExceededException("File size must be less than 10MB");
+            }
+
+            String fileName = fileService.uploadFile(profilePicture);
+            user.setProfilePicture(fileName);
+        }
+
+
         userRepository.save(user);
+
+        //send welcome mail to user
+        emailTemplateService.sendWelcomeMail(user);
 
         log.info("User with email {} saved", registerUserRequest.getEmail());
         ApiResponse<?> response = new ApiResponse<>(true, "User saved successfully", 201);

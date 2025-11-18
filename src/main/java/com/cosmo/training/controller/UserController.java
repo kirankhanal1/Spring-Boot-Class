@@ -5,8 +5,10 @@ import com.cosmo.training.dto.request.*;
 import com.cosmo.training.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/user")
@@ -14,9 +16,12 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @PostMapping("/register")
-    public ResponseEntity<ApiResponse<?>> createUser(@RequestBody @Valid RegisterUserRequest registerUserRequest) {
-        return userService.saveUser(registerUserRequest);
+    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<?>> createUser(
+            @RequestPart(value = "data") @Valid RegisterUserRequest registerUserRequest,
+            @RequestPart(value = "profilePicture", required = false) MultipartFile profilePicture
+    ) {
+        return userService.saveUser(registerUserRequest, profilePicture);
     }
 
     @PostMapping("/list")
