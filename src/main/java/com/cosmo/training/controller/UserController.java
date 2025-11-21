@@ -26,7 +26,8 @@ public class UserController {
 
     @PostMapping("/list")
     public ResponseEntity<ApiResponse<?>> listAllUsers(@RequestBody PaginationRequest paginationRequest) {
-        return userService.listUsers(paginationRequest);
+        ApiResponse<?> data = userService.listUsers(paginationRequest);
+        return ResponseEntity.ok(data);
     }
 
     @PostMapping("/view")

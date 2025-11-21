@@ -18,6 +18,8 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +50,7 @@ public class UserServiceImpl implements UserService {
     private FileService fileService;
 
 
+    @CacheEvict(value = "users", allEntries = true)
     @Override
     @Transactional
     public ResponseEntity<ApiResponse<?>> saveUser(RegisterUserRequest registerUserRequest, MultipartFile profilePicture) {
@@ -83,8 +86,13 @@ public class UserServiceImpl implements UserService {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @Cacheable(
+            value = "users",
+            key = "#paginationRequest.page + '-' + #paginationRequest.size + '-' + (#paginationRequest.keyword != null ? #paginationRequest.keyword : '')"
+    )
     @Override
-    public ResponseEntity<ApiResponse<?>> listUsers(PaginationRequest paginationRequest) {
+    public ApiResponse<?> listUsers(PaginationRequest paginationRequest) {
+        log.info("Returning users list from database");
         Pageable pageable = PageRequest.of(paginationRequest.getPage(), paginationRequest.getSize(), Sort.by(Sort.Direction.DESC, "id"));
         Page<User> usersPage;
         if (paginationRequest.getKeyword()!=null  && !paginationRequest.getKeyword().trim().isEmpty()) {
@@ -98,8 +106,7 @@ public class UserServiceImpl implements UserService {
         List<ListUserResponse> listUserResponse = userMapper.listAllUsers(usersPage);
 
         log.info("Users listed successfully");
-        ApiResponse<?> response = new ApiResponse<>(true, "Users listed successfully", 200, listUserResponse);
-        return ResponseEntity.ok(response);
+        return new ApiResponse<>(true, "Users listed successfully", 200, listUserResponse);
     }
 
     @Override

@@ -4,11 +4,12 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class ListUserResponse {
+public class ListUserResponse  implements Serializable {
     private String username;
     private String fullName;
     private String email;
