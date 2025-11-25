@@ -5,8 +5,10 @@ import com.cosmo.training.dto.request.*;
 import com.cosmo.training.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,10 +23,12 @@ public class UserController {
             @RequestPart(value = "data") @Valid RegisterUserRequest registerUserRequest,
             @RequestPart(value = "profilePicture", required = false) MultipartFile profilePicture
     ) {
-        return userService.saveUser(registerUserRequest, profilePicture);
+        ApiResponse<?> apiResponse = userService.saveUser(registerUserRequest, profilePicture);
+        return  new ResponseEntity<>(apiResponse, HttpStatus.OK);
     }
 
     @PostMapping("/list")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<?>> listAllUsers(@RequestBody PaginationRequest paginationRequest) {
         ApiResponse<?> data = userService.listUsers(paginationRequest);
         return ResponseEntity.ok(data);

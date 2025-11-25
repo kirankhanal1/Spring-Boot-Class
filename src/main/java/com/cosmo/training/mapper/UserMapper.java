@@ -1,6 +1,5 @@
 package com.cosmo.training.mapper;
 
-import com.cosmo.training.core.mail.service.MailService;
 import com.cosmo.training.dto.request.RegisterUserRequest;
 import com.cosmo.training.dto.request.UpdateUserRequest;
 import com.cosmo.training.dto.response.ListUserResponse;
@@ -11,7 +10,7 @@ import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.thymeleaf.TemplateEngine;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,18 +19,16 @@ import java.util.stream.Collectors;
 public abstract class UserMapper {
 
     @Autowired
-    private MailService mailService;
-
-    @Autowired
-    private TemplateEngine templateEngine;
+    private PasswordEncoder passwordEncoder;
 
     //Mapper method to create new user
     public User createUser(RegisterUserRequest registerUserRequest) {
         User user = new User();
         user.setUsername(registerUserRequest.getUsername());
-        user.setPassword(registerUserRequest.getPassword());
+        user.setPassword(passwordEncoder.encode(registerUserRequest.getPassword()));
         user.setEmail(registerUserRequest.getEmail());
         user.setFullName(registerUserRequest.getFullName());
+        user.setRole("USER");
         return user;
     }
 

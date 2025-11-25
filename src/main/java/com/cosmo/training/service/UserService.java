@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
-    ResponseEntity<ApiResponse<?>> saveUser(RegisterUserRequest registerUserRequest, MultipartFile profilePicture);
+    ApiResponse<?> saveUser(RegisterUserRequest registerUserRequest, MultipartFile profilePicture);
 
     ApiResponse<?> listUsers(PaginationRequest paginationRequest);
 

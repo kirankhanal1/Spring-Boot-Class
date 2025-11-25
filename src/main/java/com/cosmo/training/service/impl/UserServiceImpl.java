@@ -53,7 +53,7 @@ public class UserServiceImpl implements UserService {
     @CacheEvict(value = "users", allEntries = true)
     @Override
     @Transactional
-    public ResponseEntity<ApiResponse<?>> saveUser(RegisterUserRequest registerUserRequest, MultipartFile profilePicture) {
+    public ApiResponse<?> saveUser(RegisterUserRequest registerUserRequest, MultipartFile profilePicture) {
         if (userRepository.existsByEmail(registerUserRequest.getEmail())) {
             log.error("Failed to save user. User with email {} already exists", registerUserRequest.getEmail());
             throw new DuplicateEmailException("User with email " + registerUserRequest.getEmail() + " already exists");
@@ -82,8 +82,7 @@ public class UserServiceImpl implements UserService {
         emailTemplateService.sendWelcomeMail(user);
 
         log.info("User with email {} saved", registerUserRequest.getEmail());
-        ApiResponse<?> response = new ApiResponse<>(true, "User saved successfully", 201);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return new ApiResponse<>(true, "User saved successfully", 201);
     }
 
     @Cacheable(
