@@ -11,9 +11,11 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -28,6 +30,9 @@ public class SecurityConfig {
     @Autowired
     private CustomAuthenticationEntryPointExceptionHandler authenticationEntryPointExceptionHandler;
 
+    @Autowired
+    private JwtFilter jwtFilter;
+
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -36,15 +41,16 @@ public class SecurityConfig {
                                 "/api/v1/login",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**"
-                        )
-                                .permitAll()
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
+                .sessionManagement(sess->sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .httpBasic(Customizer.withDefaults())
                 .exceptionHandling(exception -> exception
                         .accessDeniedHandler(customAccessDeniedHandler)
                         .authenticationEntryPoint(authenticationEntryPointExceptionHandler)
                 )
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .userDetailsService(customUserDetailService)
                 .csrf(AbstractHttpConfigurer::disable);
         return http.build();

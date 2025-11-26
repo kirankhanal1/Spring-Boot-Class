@@ -1,7 +1,9 @@
 package com.cosmo.training.service.impl;
 
 import com.cosmo.training.core.dto.ApiResponse;
+import com.cosmo.training.core.security.JwtService;
 import com.cosmo.training.dto.request.LoginRequest;
+import com.cosmo.training.dto.response.AuthenticationResponse;
 import com.cosmo.training.entity.User;
 import com.cosmo.training.exception.NotFoundException;
 import com.cosmo.training.repository.UserRepository;
@@ -21,6 +23,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private AuthenticationManager authenticationManager;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private JwtService jwtService;
 
     @Override
     public ApiResponse<?> authenticate(LoginRequest loginRequest) {
@@ -34,7 +38,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
             );
-            return new ApiResponse<>(true, "Logged in successfully",200);
+
+            String accessToken = jwtService.generateAccessToken(user.get());
+            String refreshToken = jwtService.generateRefreshToken(user.get());
+
+            AuthenticationResponse authenticationResponse = new AuthenticationResponse();
+            authenticationResponse.setAccessToken(accessToken);
+            authenticationResponse.setRefreshToken(refreshToken);
+
+            return new ApiResponse<>(true, "Logged in successfully",200,authenticationResponse);
         }
         catch (BadCredentialsException e){
             throw new BadCredentialsException("The entered password is incorrect");
