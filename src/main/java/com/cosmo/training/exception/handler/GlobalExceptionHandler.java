@@ -1,10 +1,7 @@
 package com.cosmo.training.exception.handler;
 
 import com.cosmo.training.core.dto.ApiResponse;
-import com.cosmo.training.exception.DuplicateEmailException;
-import com.cosmo.training.exception.FileSizeExceededException;
-import com.cosmo.training.exception.MailException;
-import com.cosmo.training.exception.NotFoundException;
+import com.cosmo.training.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -50,5 +47,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse> handleFileSizeExceededException(FileSizeExceededException ex) {
         ApiResponse apiResponse = new ApiResponse(false, ex.getMessage(), HttpStatus.BANDWIDTH_LIMIT_EXCEEDED.value());
         return new ResponseEntity<>(apiResponse, HttpStatus.BANDWIDTH_LIMIT_EXCEEDED);
+    }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<ApiResponse> handleInvalidTokenException(InvalidTokenException ex) {
+        ApiResponse apiResponse = new ApiResponse(false, ex.getMessage(), HttpStatus.FORBIDDEN.value());
+        return new ResponseEntity<>(apiResponse, HttpStatus.FORBIDDEN);
     }
 }

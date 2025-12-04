@@ -84,4 +84,13 @@ public class JwtService {
             return false;
         }
     }
+
+    public boolean validateRefreshToken(String token, String email) {
+        try {
+            final String tokenUsername = extractEmail(token);
+            return (tokenUsername.equals(email)) && !isTokenExpired(token);
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
 }

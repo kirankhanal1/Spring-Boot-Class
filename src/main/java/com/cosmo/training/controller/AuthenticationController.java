@@ -3,6 +3,8 @@ package com.cosmo.training.controller;
 import com.cosmo.training.core.dto.ApiResponse;
 import com.cosmo.training.dto.request.LoginRequest;
 import com.cosmo.training.service.AuthenticationService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,5 +22,10 @@ public class AuthenticationController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<?>> authenticate(@Valid @RequestBody LoginRequest loginRequest)  {
         return ResponseEntity.ok(authenticationService.authenticate(loginRequest));
+    }
+
+    @PostMapping("/refresh/token")
+    public ResponseEntity<ApiResponse<?>> refreshToken(HttpServletRequest request, HttpServletResponse response)  {
+        return ResponseEntity.ok(authenticationService.refreshToken(request,response));
     }
 }
